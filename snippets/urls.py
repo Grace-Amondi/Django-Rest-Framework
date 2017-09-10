@@ -1,9 +1,8 @@
 from django.conf.urls import url, include
 from rest_framework.urlpatterns import format_suffix_patterns
 from snippets import views
-from snippets.views import SnippetViewSet, UserViewSet, api_root
+from snippets.views import SnippetViewSet, UserViewSet, api_root, LocationList
 from rest_framework import renderers
-
 
 snippet_list = SnippetViewSet.as_view({
     'get': 'list',
@@ -25,6 +24,13 @@ user_detail = UserViewSet.as_view({
     'get': 'retrieve'
 })
 
+location_list = LocationList.as_view({
+    'get': 'retrieve',
+    'post': 'create',
+    'put': 'update',
+    'delete': 'destroy'
+})
+
 # API endpoints
 urlpatterns = format_suffix_patterns([
     url(r'^$', api_root),
@@ -32,7 +38,8 @@ urlpatterns = format_suffix_patterns([
     url(r'^snippets/(?P<pk>[0-9]+)/$', snippet_detail, name='snippet-detail'),
     url(r'^snippets/(?P<pk>[0-9]+)/highlight/$', snippet_highlight, name='snippet-highlight'),
     url(r'^users/$', user_list, name='user-list'),
-    url(r'^users/(?P<pk>[0-9]+)/$', user_detail, name='user-detail')
+    url(r'^users/(?P<pk>[0-9]+)/$', user_detail, name='user-detail'),
+    url(r'^locations/$', location_list, name='location_list'),
 ])
 
 # Login and logout views for the browsable API

@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES, Location, Link
 from django.contrib.auth.models import User
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 
 class SnippetSerializer(serializers.HyperlinkedModelSerializer):
@@ -9,7 +10,7 @@ class SnippetSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Snippet
-        fields = ('url','id', 'title', 'code', 'linenos', 'language', 'style', 'owner','highlight')
+        fields = ('url', 'id', 'title', 'code', 'linenos', 'language', 'style', 'owner', 'highlight')
 
     def create(self, validated_data):
         """
@@ -38,3 +39,36 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'username', 'snippets')
 
 
+class LocationSerializer(GeoFeatureModelSerializer):
+    """ A class to serialize locations as GeoJSON compatible data """
+
+    class Meta:
+        model = Location
+        geo_field = "point"
+        auto_bbox = True
+
+        # you can also explicitly declare which fields you want to include
+        # as with a ModelSerializer.
+        fields = ('id', 'name', 'recieved', 'county')
+
+
+class NetworkGeoSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model = Link
+        geo_field = 'geo'
+        auto_bbox = True
+
+    def get_properties(self, instance, fields):
+        # This is a PostgreSQL HStore field, which django maps to a dict
+        return instance.metadata
+
+    def unformat_geojson(self, feature):
+        attrs = {
+            self.Meta.geo_field: feature["geometry"],
+            "metadata": feature["properties"]
+        }
+
+        if self.Meta.bbox_geo_field and "bbox" in feature:
+            attrs[self.Meta.bbox_geo_field] = Polygon.from_bbox(feature["bbox"])
+
+        return attrs

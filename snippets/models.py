@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
-from django.db import models
+# from django.db import models
 from pygments.lexers import get_all_lexers, get_lexer_by_name
 from pygments.styles import get_all_styles
 from pygments.formatters.html import HtmlFormatter
 from pygments import highlight
+from django.contrib.gis.db import models
+from django.contrib.postgres.fields import HStoreField
 
 
 LEXERS = [item for item in get_all_lexers() if item[1]]
@@ -34,3 +36,23 @@ class Snippet(models.Model):
 
     def __unicode__(self):
         return self.title
+
+
+class Location(models.Model):
+    name = models.CharField(max_length=255)
+    recieved = models.BooleanField(default=False)
+    county = models.CharField(max_length=100)
+    point = models.PointField(srid=4326)
+
+    def __unicode__(self):
+        return self.name
+
+
+class Link(models.Model):
+    """
+    Metadata is stored in a PostgreSQL HStore field, which allows us to
+    store arbitrary key-value pairs with a link record.
+    """
+    metadata = HStoreField(blank=True, null=True, default=dict)
+    geo = models.LineStringField()
+    objects = models.GeoManager()

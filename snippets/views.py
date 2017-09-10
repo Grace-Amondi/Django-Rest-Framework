@@ -1,6 +1,8 @@
-from snippets.models import Snippet
+from snippets.models import Snippet,Location
 from snippets.serializers import SnippetSerializer
 from snippets.serializers import UserSerializer
+from snippets.serializers import LocationSerializer
+# from snippets.serializers imporr NetworkGeoSerializer
 from rest_framework import generics
 from rest_framework import permissions
 from django.contrib.auth.models import User
@@ -10,6 +12,7 @@ from rest_framework import renderers
 from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route
+from rest_framework_gis.filters import DistanceToPointFilter
 
 
 @api_view(['GET'])
@@ -47,5 +50,13 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class LocationList(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+    distance_filter_field = 'geometry'
+    filter_backends = (DistanceToPointFilter, )
+    bbox_filter_include_overlapping = True # Optional
 
 
